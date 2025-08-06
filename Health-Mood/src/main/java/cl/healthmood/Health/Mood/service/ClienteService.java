@@ -1,6 +1,6 @@
-package com.bootcamp.service;
+package cl.healthmood.Health.Mood.service;
 
-import com.bootcamp.model.Cliente;
+import cl.healthmood.Health.Mood.model.Cliente;
 import java.util.List;
 import java.util.Optional;
 

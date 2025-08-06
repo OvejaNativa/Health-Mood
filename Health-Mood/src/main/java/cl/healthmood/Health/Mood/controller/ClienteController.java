@@ -1,7 +1,7 @@
-package controller;
+package cl.healthmood.Health.Mood.controller;
 
-import com.bootcamp.model.Cliente;
-import com.bootcamp.service.ClienteService;
+import cl.healthmood.Health.Mood.model.Cliente;
+import cl.healthmood.Health.Mood.service.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

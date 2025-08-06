@@ -1,7 +1,7 @@
-package com.bootcamp.service;
+package cl.healthmood.Health.Mood.service;
 
-import com.bootcamp.model.Producto;
-import com.bootcamp.repository.ProductoRepository;
+import cl.healthmood.Health.Mood.model.Producto;
+import cl.healthmood.Health.Mood.repository.ProductoRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

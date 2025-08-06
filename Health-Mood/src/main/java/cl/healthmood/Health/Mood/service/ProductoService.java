@@ -1,5 +1,5 @@
-package com.bootcamp.service;
-import com.bootcamp.model.Producto;
+package cl.healthmood.Health.Mood.service;
+import cl.healthmood.Health.Mood.model.Producto;
 import java.util.List;
 import java.util.Optional;
 
