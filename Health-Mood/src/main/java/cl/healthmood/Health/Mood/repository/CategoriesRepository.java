@@ -1,6 +1,6 @@
-package repository;
+package cl.healthmood.Health.Mood.repository;
 
-import com.bootcamp.model.Categories;
+import cl.healthmood.Health.Mood.model.Categories;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CategoriesRepository extends JpaRepository<Categories, Integer> {

@@ -1,4 +1,4 @@
-package model;
+package cl.healthmood.Health.Mood.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

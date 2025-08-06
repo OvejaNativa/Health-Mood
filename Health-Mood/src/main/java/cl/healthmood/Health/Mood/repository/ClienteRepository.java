@@ -1,6 +1,6 @@
-package repository;
+package cl.healthmood.Health.Mood.repository;
 
-import com.bootcamp.model.Cliente;
+import cl.healthmood.Health.Mood.model.Cliente;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
