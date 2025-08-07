@@ -1,7 +1,7 @@
-package com.bootcamp.controller;
+package cl.healthmood.Health.Mood.controller;
 
-import com.bootcamp.model.Compra;
-import com.bootcamp.service.CompraService;
+import cl.healthmood.Health.Mood.model.Compra;
+import cl.healthmood.Health.Mood.service.CompraService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
