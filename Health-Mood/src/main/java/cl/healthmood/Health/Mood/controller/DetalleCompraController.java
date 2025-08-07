@@ -1,4 +1,4 @@
-package com.bootcamp.controller;
+package cl.healthmood.Health.Mood.controller;
 
 import com.bootcamp.model.DetalleCompra;
 import com.bootcamp.service.DetalleCompraService;
