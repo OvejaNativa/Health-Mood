@@ -1,4 +1,4 @@
-package com.bootcamp.model;
+package cl.healthmood.Health.Mood.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
