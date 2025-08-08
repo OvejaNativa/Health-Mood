@@ -23,8 +23,8 @@ public class Image {
     @Column(name = "imgURL", nullable = false, length = 150)
     private String imageUrl;
 
-    @Column(name = "Order", nullable = false)
-    private Integer order;
+    @Column(name = "Pedido", nullable = false)
+    private Integer pedido;
 
     @Column(name = "is_primary", nullable = false, length = 1)
     private String isPrimary;
