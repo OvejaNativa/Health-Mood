@@ -30,9 +30,11 @@ public class Pedido {
     private String orderStatus;
 
     @Column(name = "pedido_date")
+    @Temporal(TemporalType.DATE)
     private LocalDate orderDate;
 
     @Column(name = "required_date")
+    @Temporal(TemporalType.DATE)
     private LocalDate requiredDate;
 
     @Column(name = "shipped_date")
