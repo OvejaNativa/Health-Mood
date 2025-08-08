@@ -1,5 +1,7 @@
 package cl.healthmood.Health.Mood.service;
-import cl.healthmood.Health.Mood.model.Product;
+
+import cl.healthmood.Health.Mood.dto.ProductRequest;
+import cl.healthmood.Health.Mood.dto.ProductResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -8,29 +10,29 @@ import java.util.Optional;
 
 public interface ProductService {
 
-    Product save(Product product);
+    ProductResponse save(ProductRequest productRequest);
 
-    Optional<Product> findById(Integer id);
+    Optional<ProductResponse> findById(Integer id);
 
-    List<Product> findAll();
+    List<ProductResponse> findAll();
 
-    Page<Product> findAll(Pageable pageable);
+    Page<ProductResponse> findAll(Pageable pageable);
 
-    Product update(Integer id, Product product);
+    ProductResponse update(Integer id, ProductRequest productRequest);
 
     void deleteById(Integer id);
 
     boolean existsById(Integer id);
 
-    List<Product> findByNameContainingIgnoreCase(String name);
+    List<ProductResponse> findByNameContainingIgnoreCase(String name);
 
-    List<Product> findByCategoryId(Integer categoryId);
+    List<ProductResponse> findByCategoryId(Integer categoryId);
 
-    List<Product> findByPriceBetween(Integer minPrice, Integer maxPrice);
+    List<ProductResponse> findByPriceBetween(Integer minPrice, Integer maxPrice);
 
-    List<Product> findByPriceGreaterThanEqual(Integer price);
+    List<ProductResponse> findByPriceGreaterThanEqual(Integer price);
 
-    List<Product> findByPriceLessThanEqual(Integer price);
+    List<ProductResponse> findByPriceLessThanEqual(Integer price);
 
     long count();
 }

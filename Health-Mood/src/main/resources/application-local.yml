@@ -1,4 +1,4 @@
-# Para desarrollo local (localhost, root, sin contraseña)
+# Para desarrollo local (localhost, root, sin contraseï¿½a)
 spring:
   datasource:
     url: ${DB_URL}

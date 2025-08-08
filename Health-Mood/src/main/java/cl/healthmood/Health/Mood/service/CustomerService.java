@@ -1,33 +1,34 @@
 package cl.healthmood.Health.Mood.service;
 
-import cl.healthmood.Health.Mood.model.Customer;
+import cl.healthmood.Health.Mood.dto.CustomerRequest;
+import cl.healthmood.Health.Mood.dto.CustomerResponse;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface CustomerService {
 
-    List<Customer> findAll();
+    List<CustomerResponse> findAll();
 
-    Optional<Customer> findById(Integer id);
+    Optional<CustomerResponse> findById(Integer id);
 
-    Customer save(Customer customer);
+    CustomerResponse save(CustomerRequest customerRequest);
 
-    Customer update(Integer id, Customer customer);
+    CustomerResponse update(Integer id, CustomerRequest customerRequest);
 
     void deleteById(Integer id);
 
-    Optional<Customer> findByEmail(String email);
+    Optional<CustomerResponse> findByEmail(String email);
 
-    List<Customer> findByFirstName(String firstName);
+    List<CustomerResponse> findByFirstName(String firstName);
 
-    List<Customer> findByLastName(String lastName);
+    List<CustomerResponse> findByLastName(String lastName);
 
-    List<Customer> findByCity(String city);
+    List<CustomerResponse> findByCity(String city);
 
-    List<Customer> findByCommune(String commune);
+    List<CustomerResponse> findByCommune(String commune);
 
-    List<Customer> findByFullName(String name);
+    List<CustomerResponse> findByFullName(String name);
 
     boolean existsByEmail(String email);
 
