@@ -26,8 +26,8 @@ public class Payment {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @JoinColumn(name = "pedido_id")
+    private Pedido pedido;
 
     @Column(name = "payment_date")
     private LocalDate paymentDate;

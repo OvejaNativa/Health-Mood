@@ -154,6 +154,7 @@ replay_pid*
 
 # Environment configuration files
 .env
+.env/
 .env.local
 .env.development.local
 .env.test.local

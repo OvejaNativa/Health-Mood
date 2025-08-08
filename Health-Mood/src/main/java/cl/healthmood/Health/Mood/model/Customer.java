@@ -52,8 +52,9 @@
         @Column(name = "customerscol", length = 45)
         private String customersCol;
 
-        @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-        private List<Order> orders;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Pedido> pedido;
 
         @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
         private List<Payment> payments;
