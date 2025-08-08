@@ -1,8 +1,10 @@
 package cl.healthmood.Health.Mood.service;
 
+import cl.healthmood.Health.Mood.dto.ProductRequest;
+import cl.healthmood.Health.Mood.dto.ProductResponse;
+import cl.healthmood.Health.Mood.mapper.ProductMapper;
 import cl.healthmood.Health.Mood.model.Product;
 import cl.healthmood.Health.Mood.repository.ProductRepository;
-import cl.healthmood.Health.Mood.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,47 +21,56 @@ import java.util.Optional;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     @Override
     @Transactional
-    public Product save(Product product) {
-        log.debug("Guardando producto: {}", product.getName());
-        validateProduct(product);
-        return productRepository.save(product);
+    public ProductResponse save(ProductRequest productRequest) {
+        log.debug("Guardando producto: {}", productRequest.getName());
+        validateProductRequest(productRequest);
+
+        Product product = productMapper.toEntity(productRequest);
+        Product savedProduct = productRepository.save(product);
+
+        return productMapper.toResponse(savedProduct);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Product> findById(Integer id) {
+    public Optional<ProductResponse> findById(Integer id) {
         log.debug("Buscando producto por ID: {}", id);
-        return productRepository.findById(id);
+        return productRepository.findById(id)
+                .map(productMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Product> findAll() {
+    public List<ProductResponse> findAll() {
         log.debug("Obteniendo todos los productos");
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        return productMapper.toResponseList(products);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> findAll(Pageable pageable) {
+    public Page<ProductResponse> findAll(Pageable pageable) {
         log.debug("Obteniendo productos paginados: {}", pageable);
-        return productRepository.findAll(pageable);
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return productPage.map(productMapper::toResponse);
     }
 
     @Override
     @Transactional
-    public Product update(Integer id, Product product) {
+    public ProductResponse update(Integer id, ProductRequest productRequest) {
         log.debug("Actualizando producto ID: {}", id);
 
-        return productRepository.findById(id)
-                .map(existingProduct -> {
-                    updateProductFields(existingProduct, product);
-                    return productRepository.save(existingProduct);
-                })
+        Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+
+        productMapper.updateEntityFromRequest(existingProduct, productRequest);
+        Product updatedProduct = productRepository.save(existingProduct);
+
+        return productMapper.toResponse(updatedProduct);
     }
 
     @Override
@@ -82,38 +93,43 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Product> findByNameContainingIgnoreCase(String name) {
+    public List<ProductResponse> findByNameContainingIgnoreCase(String name) {
         log.debug("Buscando productos por nombre: {}", name);
-        return productRepository.findByNameContainingIgnoreCase(name);
+        List<Product> products = productRepository.findByNameContainingIgnoreCase(name);
+        return productMapper.toResponseList(products);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Product> findByCategoryId(Integer categoryId) {
+    public List<ProductResponse> findByCategoryId(Integer categoryId) {
         log.debug("Buscando productos por categoría ID: {}", categoryId);
-        return productRepository.findByCategoryCategoryId(categoryId);
+        List<Product> products = productRepository.findByCategoryCategoryId(categoryId);
+        return productMapper.toResponseList(products);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Product> findByPriceBetween(Integer minPrice, Integer maxPrice) {
+    public List<ProductResponse> findByPriceBetween(Integer minPrice, Integer maxPrice) {
         log.debug("Buscando productos en rango de precios: {} - {}", minPrice, maxPrice);
         validatePriceRange(minPrice, maxPrice);
-        return productRepository.findByPriceBetween(minPrice, maxPrice);
+        List<Product> products = productRepository.findByPriceBetween(minPrice, maxPrice);
+        return productMapper.toResponseList(products);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Product> findByPriceGreaterThanEqual(Integer price) {
+    public List<ProductResponse> findByPriceGreaterThanEqual(Integer price) {
         log.debug("Buscando productos con precio >= {}", price);
-        return productRepository.findByPriceGreaterThanEqual(price);
+        List<Product> products = productRepository.findByPriceGreaterThanEqual(price);
+        return productMapper.toResponseList(products);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Product> findByPriceLessThanEqual(Integer price) {
+    public List<ProductResponse> findByPriceLessThanEqual(Integer price) {
         log.debug("Buscando productos con precio <= {}", price);
-        return productRepository.findByPriceLessThanEqual(price);
+        List<Product> products = productRepository.findByPriceLessThanEqual(price);
+        return productMapper.toResponseList(products);
     }
 
     @Override
@@ -122,12 +138,11 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.count();
     }
 
-    private void validateProduct(Product product) {
-        System.out.println("precio recibido: "+ product.getPrice());
-        if (product.getName() == null || product.getName().trim().isEmpty()) {
+    private void validateProductRequest(ProductRequest productRequest) {
+        if (productRequest.getName() == null || productRequest.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del producto es obligatorio");
         }
-        if (product.getPrice() == null || product.getPrice() < 0) {
+        if (productRequest.getPrice() == null || productRequest.getPrice() < 0) {
             throw new IllegalArgumentException("El precio debe ser mayor o igual a 0");
         }
     }
@@ -141,21 +156,6 @@ public class ProductServiceImpl implements ProductService {
         }
         if (minPrice > maxPrice) {
             throw new IllegalArgumentException("El precio mínimo no puede ser mayor al máximo");
-        }
-    }
-
-    private void updateProductFields(Product existing, Product updated) {
-        if (updated.getName() != null && !updated.getName().trim().isEmpty()) {
-            existing.setName(updated.getName().trim());
-        }
-        if (updated.getDescription() != null) {
-            existing.setDescription(updated.getDescription());
-        }
-        if (updated.getPrice() != null && updated.getPrice() >= 0) {
-            existing.setPrice(updated.getPrice());
-        }
-        if (updated.getCategory() != null) {
-            existing.setCategory(updated.getCategory());
         }
     }
 }

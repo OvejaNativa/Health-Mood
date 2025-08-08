@@ -1,8 +1,10 @@
 package cl.healthmood.Health.Mood.service;
 
+import cl.healthmood.Health.Mood.dto.CustomerRequest;
+import cl.healthmood.Health.Mood.dto.CustomerResponse;
+import cl.healthmood.Health.Mood.mapper.CustomerMapper;
 import cl.healthmood.Health.Mood.model.Customer;
 import cl.healthmood.Health.Mood.repository.CustomerRepository;
-import cl.healthmood.Health.Mood.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,36 +18,42 @@ import java.util.Optional;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public List<Customer> findAll() {
-        return customerRepository.findAll();
+    public List<CustomerResponse> findAll() {
+        List<Customer> customers = customerRepository.findAll();
+        return customerMapper.toResponseList(customers);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Customer> findById(Integer id) {
-        return customerRepository.findById(id);
+    public Optional<CustomerResponse> findById(Integer id) {
+        return customerRepository.findById(id)
+                .map(customerMapper::toResponse);
     }
 
     @Override
-    public Customer save(Customer customer) {
-        // Validaciones antes de guardar
-        if (customer.getFirstName() == null || customer.getFirstName().trim().isEmpty()) {
+    public CustomerResponse save(CustomerRequest customerRequest) {
+        // Validaciones básicas (aunque también se validan con @Valid en el controller)
+        if (customerRequest.getFirstName() == null || customerRequest.getFirstName().trim().isEmpty()) {
             throw new IllegalArgumentException("First name cannot be null or empty");
         }
-        if (customer.getLastName() == null || customer.getLastName().trim().isEmpty()) {
+        if (customerRequest.getLastName() == null || customerRequest.getLastName().trim().isEmpty()) {
             throw new IllegalArgumentException("Last name cannot be null or empty");
         }
-        if (customer.getEmail() == null || customer.getEmail().trim().isEmpty()) {
+        if (customerRequest.getEmail() == null || customerRequest.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
 
         // Verificar email único
-        if (customerRepository.existsByEmail(customer.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + customer.getEmail());
+        if (customerRepository.existsByEmail(customerRequest.getEmail())) {
+            throw new IllegalArgumentException("Email already exists: " + customerRequest.getEmail());
         }
+
+        // Crear entidad a partir del request
+        Customer customer = customerMapper.toEntity(customerRequest);
 
         // Limpiar espacios en blanco
         customer.setFirstName(customer.getFirstName().trim());
@@ -68,23 +76,51 @@ public class CustomerServiceImpl implements CustomerService {
             customer.setRol(customer.getRol().trim());
         }
 
-        return customerRepository.save(customer);
+        Customer savedCustomer = customerRepository.save(customer);
+        return customerMapper.toResponse(savedCustomer);
     }
 
     @Override
-    public Customer update(Integer id, Customer customer) {
+    public CustomerResponse update(Integer id, CustomerRequest customerRequest) {
         return customerRepository.findById(id)
                 .map(existingCustomer -> {
-                    existingCustomer.setFirstName(customer.getFirstName());
-                    existingCustomer.setLastName(customer.getLastName());
-                    existingCustomer.setPhone(customer.getPhone());
-                    existingCustomer.setEmail(customer.getEmail());
-                    existingCustomer.setStreet(customer.getStreet());
-                    existingCustomer.setCity(customer.getCity());
-                    existingCustomer.setCommune(customer.getCommune());
-                    existingCustomer.setPassword(customer.getPassword());
-                    existingCustomer.setRol(customer.getRol());
-                    return customerRepository.save(existingCustomer);
+                    // Verificar email único si se está cambiando
+                    if (customerRequest.getEmail() != null &&
+                            !customerRequest.getEmail().equals(existingCustomer.getEmail()) &&
+                            customerRepository.existsByEmail(customerRequest.getEmail())) {
+                        throw new IllegalArgumentException("Email already exists: " + customerRequest.getEmail());
+                    }
+
+                    customerMapper.updateEntityFromRequest(customerRequest, existingCustomer);
+
+                    // Limpiar espacios en blanco
+                    if (existingCustomer.getFirstName() != null) {
+                        existingCustomer.setFirstName(existingCustomer.getFirstName().trim());
+                    }
+                    if (existingCustomer.getLastName() != null) {
+                        existingCustomer.setLastName(existingCustomer.getLastName().trim());
+                    }
+                    if (existingCustomer.getEmail() != null) {
+                        existingCustomer.setEmail(existingCustomer.getEmail().trim());
+                    }
+                    if (existingCustomer.getPhone() != null) {
+                        existingCustomer.setPhone(existingCustomer.getPhone().trim());
+                    }
+                    if (existingCustomer.getStreet() != null) {
+                        existingCustomer.setStreet(existingCustomer.getStreet().trim());
+                    }
+                    if (existingCustomer.getCity() != null) {
+                        existingCustomer.setCity(existingCustomer.getCity().trim());
+                    }
+                    if (existingCustomer.getCommune() != null) {
+                        existingCustomer.setCommune(existingCustomer.getCommune().trim());
+                    }
+                    if (existingCustomer.getRol() != null) {
+                        existingCustomer.setRol(existingCustomer.getRol().trim());
+                    }
+
+                    Customer updatedCustomer = customerRepository.save(existingCustomer);
+                    return customerMapper.toResponse(updatedCustomer);
                 })
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
     }
@@ -99,38 +135,44 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Customer> findByEmail(String email) {
-        return customerRepository.findByEmail(email);
+    public Optional<CustomerResponse> findByEmail(String email) {
+        return customerRepository.findByEmail(email)
+                .map(customerMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Customer> findByFirstName(String firstName) {
-        return customerRepository.findByFirstNameContainingIgnoreCase(firstName);
+    public List<CustomerResponse> findByFirstName(String firstName) {
+        List<Customer> customers = customerRepository.findByFirstNameContainingIgnoreCase(firstName);
+        return customerMapper.toResponseList(customers);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Customer> findByLastName(String lastName) {
-        return customerRepository.findByLastNameContainingIgnoreCase(lastName);
+    public List<CustomerResponse> findByLastName(String lastName) {
+        List<Customer> customers = customerRepository.findByLastNameContainingIgnoreCase(lastName);
+        return customerMapper.toResponseList(customers);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Customer> findByCity(String city) {
-        return customerRepository.findByCity(city);
+    public List<CustomerResponse> findByCity(String city) {
+        List<Customer> customers = customerRepository.findByCity(city);
+        return customerMapper.toResponseList(customers);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Customer> findByCommune(String commune) {
-        return customerRepository.findByCommune(commune);
+    public List<CustomerResponse> findByCommune(String commune) {
+        List<Customer> customers = customerRepository.findByCommune(commune);
+        return customerMapper.toResponseList(customers);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Customer> findByFullName(String name) {
-        return customerRepository.findByFullNameContaining(name);
+    public List<CustomerResponse> findByFullName(String name) {
+        List<Customer> customers = customerRepository.findByFullNameContaining(name);
+        return customerMapper.toResponseList(customers);
     }
 
     @Override
