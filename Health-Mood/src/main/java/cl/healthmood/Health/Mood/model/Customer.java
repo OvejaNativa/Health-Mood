@@ -6,6 +6,8 @@
     import lombok.Builder;
 
     import jakarta.persistence.*;
+    import org.hibernate.annotations.CreationTimestamp;
+
     import java.time.LocalDate;
     import java.util.List;
 
@@ -43,14 +45,15 @@
         @Column(name = "commune", length = 50)
         private String commune;
 
-        @Column(name = "passwords", length = 65)
+        @Column(name = "password", length = 200)
         private String password;
 
         @Column(name = "register_date")
+        @CreationTimestamp
         private LocalDate registerDate;
 
-        @Column(name = "customerscol", length = 45)
-        private String customersCol;
+        @Column(name = "rol", length = 45)
+        private String rol;
 
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

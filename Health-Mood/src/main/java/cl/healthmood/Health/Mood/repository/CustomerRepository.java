@@ -1,16 +1,13 @@
-
 package cl.healthmood.Health.Mood.repository;
 
 import cl.healthmood.Health.Mood.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Integer> {
@@ -25,14 +22,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
     List<Customer> findByCommune(String commune);
 
-    List<Customer> findByRegisterDateBetween(LocalDate startDate, LocalDate endDate);
-
     @Query("SELECT c FROM Customer c WHERE c.firstName LIKE %:name% OR c.lastName LIKE %:name%")
-    List<Customer> searchByName(@Param("name") String name);
+    List<Customer> findByFullNameContaining(@Param("name") String name);
 
     boolean existsByEmail(String email);
-
-    @Query("SELECT COUNT(o) FROM Pedido o WHERE o.customer.customerId = :customerId")
-    Long countOrdersByCustomerId(@Param("customerId") Integer customerId);
-
 }
