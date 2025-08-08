@@ -2,6 +2,7 @@ package cl.healthmood.Health.Mood.repository;
 
 import cl.healthmood.Health.Mood.model.ContactMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,4 +29,5 @@ public interface ContactMessageRepository extends JpaRepository<ContactMessage, 
 
     @Query("SELECT COUNT(cm) FROM ContactMessage cm WHERE DATE(cm.sentAt) = CURRENT_DATE")
     Long countTodayMessages();
+
 }

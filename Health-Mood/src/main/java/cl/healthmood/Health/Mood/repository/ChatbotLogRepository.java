@@ -2,6 +2,7 @@ package cl.healthmood.Health.Mood.repository;
 
 import cl.healthmood.Health.Mood.model.ChatbotLog;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,3 +26,4 @@ public interface ChatbotLogRepository extends JpaRepository<ChatbotLog, Integer>
     @Query("SELECT COUNT(cl) FROM ChatbotLog cl WHERE DATE(cl.timestamp) = CURRENT_DATE")
     Long countTodayLogs();
 }
+

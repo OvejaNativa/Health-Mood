@@ -1,7 +1,9 @@
+
 package cl.healthmood.Health.Mood.repository;
 
 import cl.healthmood.Health.Mood.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,4 +34,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
 
     @Query("SELECT COUNT(o) FROM Pedido o WHERE o.customer.customerId = :customerId")
     Long countOrdersByCustomerId(@Param("customerId") Integer customerId);
+
 }
