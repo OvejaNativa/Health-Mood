@@ -1,9 +1,10 @@
-package cl.healthmood.Health.Mood.service;
+package cl.healthmood.Health.Mood.security.service;
 
 import cl.healthmood.Health.Mood.dto.*;
 import cl.healthmood.Health.Mood.model.Customer;
+import cl.healthmood.Health.Mood.model.Role;
 import cl.healthmood.Health.Mood.repository.CustomerRepository;
-import cl.healthmood.Health.Mood.security.JwtUtil;
+import cl.healthmood.Health.Mood.security.jwt.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ public class AuthService {
 
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtUtils jwtUtil;
 
     public LoginResponse login(LoginRequest request) {
         Customer customer = customerRepository.findByEmail(request.getEmail())
@@ -28,7 +29,7 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(
                 customer.getEmail(), 
-                customer.getRol(), 
+                customer.getRole().name(), 
                 customer.getCustomerId()
         );
 
@@ -38,7 +39,7 @@ public class AuthService {
                 .email(customer.getEmail())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
-                .role(customer.getRol())
+                .role(customer.getRole().name())
                 .build();
     }
 
@@ -50,13 +51,9 @@ public class AuthService {
         Customer customer = Customer.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .phone(request.getPhone())
                 .email(request.getEmail())
-                .street(request.getStreet())
-                .city(request.getCity())
-                .commune(request.getCommune())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .rol(request.getRol() != null ? request.getRol() : "USER")
+                .role(request.getRol() != null ? request.getRol() : Role.CUSTOMER)
                 .registerDate(LocalDate.now())
                 .build();
 
@@ -72,7 +69,7 @@ public class AuthService {
                 .city(savedCustomer.getCity())
                 .commune(savedCustomer.getCommune())
                 .registerDate(savedCustomer.getRegisterDate())
-                .rol(savedCustomer.getRol())
+                .rol(savedCustomer.getRole() != null ? savedCustomer.getRole().name() : null)
                 .build();
     }
 
@@ -93,7 +90,7 @@ public class AuthService {
 
         String newToken = jwtUtil.generateToken(
                 customer.getEmail(), 
-                customer.getRol(), 
+                customer.getRole().name(), 
                 customer.getCustomerId()
         );
 
@@ -103,7 +100,7 @@ public class AuthService {
                 .email(customer.getEmail())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
-                .role(customer.getRol())
+                .role(customer.getRole().name())
                 .build();
     }
 }

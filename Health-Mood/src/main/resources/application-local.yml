@@ -16,9 +16,9 @@ spring:
 
   sql:
     init:
-      mode: always   # o ALWAYS si quieres que cargue schema.sql en cada arranque
+      mode: never   # o ALWAYS si quieres que cargue schema.sql en cada arranque
 
 app:
   security:
     cors:
-      dev: true  # Deshabilita CORS para Postman en desarrollo local
+      dev: true  # Deshabilita CORS para Postman en desarrollo local Deshabilita CORS para Postman en desarrollo local
