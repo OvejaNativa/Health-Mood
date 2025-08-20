@@ -1,0 +1,9 @@
+package cl.healthmood.Health.Mood.security.service;
+
+import cl.healthmood.Health.Mood.model.Customer;
+
+import java.util.Optional;
+
+public interface CustomerService {
+    Optional<Customer> findByEmail(String email);
+}

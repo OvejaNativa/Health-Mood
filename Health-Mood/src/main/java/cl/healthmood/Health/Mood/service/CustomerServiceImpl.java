@@ -6,6 +6,7 @@ import cl.healthmood.Health.Mood.mapper.CustomerMapper;
 import cl.healthmood.Health.Mood.model.Customer;
 import cl.healthmood.Health.Mood.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,6 +54,12 @@ public class CustomerServiceImpl implements CustomerService {
             throw new IllegalArgumentException("Email already exists: " + customerRequest.getEmail());
         }
 
+        // 🔒 Encriptar la contraseña si no está ya encriptada
+        if (customerRequest.getPassword() != null && !customerRequest.getPassword().startsWith("$2a$")) {
+            String encodedPassword = passwordEncoder.encode(customerRequest.getPassword());
+            customerRequest.setPassword(encodedPassword);
+        }
+
         // Crear entidad a partir del request
         Customer customer = customerMapper.toEntity(customerRequest);
 
@@ -72,9 +80,7 @@ public class CustomerServiceImpl implements CustomerService {
         if (customer.getCommune() != null) {
             customer.setCommune(customer.getCommune().trim());
         }
-        if (customer.getRol() != null) {
-            customer.setRol(customer.getRol().trim());
-        }
+        // Note: role is an enum, no need to trim
 
         Customer savedCustomer = customerRepository.save(customer);
         return customerMapper.toResponse(savedCustomer);
@@ -115,9 +121,7 @@ public class CustomerServiceImpl implements CustomerService {
                     if (existingCustomer.getCommune() != null) {
                         existingCustomer.setCommune(existingCustomer.getCommune().trim());
                     }
-                    if (existingCustomer.getRol() != null) {
-                        existingCustomer.setRol(existingCustomer.getRol().trim());
-                    }
+                    // Note: role is an enum, no need to trim
 
                     Customer updatedCustomer = customerRepository.save(existingCustomer);
                     return customerMapper.toResponse(updatedCustomer);

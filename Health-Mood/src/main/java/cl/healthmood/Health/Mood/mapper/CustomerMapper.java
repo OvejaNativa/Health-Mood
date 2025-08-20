@@ -19,13 +19,9 @@ public class CustomerMapper {
         return Customer.builder()
                 .firstName(customerRequest.getFirstName())
                 .lastName(customerRequest.getLastName())
-                .phone(customerRequest.getPhone())
                 .email(customerRequest.getEmail())
-                .street(customerRequest.getStreet())
-                .city(customerRequest.getCity())
-                .commune(customerRequest.getCommune())
                 .password(customerRequest.getPassword())
-                .rol(customerRequest.getRol())
+                .role(customerRequest.getRol()) // 👤 Mapear el rol
                 .build();
     }
 
@@ -44,7 +40,7 @@ public class CustomerMapper {
                 .city(customer.getCity())
                 .commune(customer.getCommune())
                 .registerDate(customer.getRegisterDate())
-                .rol(customer.getRol())
+                .rol(customer.getRole() != null ? customer.getRole().name() : null)
                 .build();
     }
 
@@ -69,26 +65,18 @@ public class CustomerMapper {
         if (customerRequest.getLastName() != null) {
             customer.setLastName(customerRequest.getLastName());
         }
-        if (customerRequest.getPhone() != null) {
-            customer.setPhone(customerRequest.getPhone());
-        }
+
         if (customerRequest.getEmail() != null) {
             customer.setEmail(customerRequest.getEmail());
         }
-        if (customerRequest.getStreet() != null) {
-            customer.setStreet(customerRequest.getStreet());
-        }
-        if (customerRequest.getCity() != null) {
-            customer.setCity(customerRequest.getCity());
-        }
-        if (customerRequest.getCommune() != null) {
-            customer.setCommune(customerRequest.getCommune());
-        }
+
         if (customerRequest.getPassword() != null) {
             customer.setPassword(customerRequest.getPassword());
         }
+
         if (customerRequest.getRol() != null) {
-            customer.setRol(customerRequest.getRol());
+            customer.setRole(customerRequest.getRol());
         }
+
     }
 }

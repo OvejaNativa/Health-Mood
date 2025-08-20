@@ -52,8 +52,9 @@
         @CreationTimestamp
         private LocalDate registerDate;
 
-        @Column(name = "rol", length = 45)
-        private String rol;
+        @Column(name = "rol")
+        @Enumerated(EnumType.STRING)
+        private Role role;
 
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
