@@ -2,8 +2,8 @@ package cl.healthmood.Health.Mood.security.controller;
 
 import cl.healthmood.Health.Mood.dto.CustomerRequest;
 import cl.healthmood.Health.Mood.dto.CustomerResponse;
-import cl.healthmood.Health.Mood.dto.LoginRequest;
-import cl.healthmood.Health.Mood.dto.LoginResponse;
+import cl.healthmood.Health.Mood.security.dto.LoginRequest;
+import cl.healthmood.Health.Mood.security.dto.LoginResponse;
 import cl.healthmood.Health.Mood.model.Role;
 import cl.healthmood.Health.Mood.security.service.CustomerDetailsServiceImpl;
 import cl.healthmood.Health.Mood.service.CustomerService;
@@ -38,12 +38,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            log.info("🔐 Intento de login para email: {}", loginRequest.getEmail());
+            log.info("🔐 Intento de login para email: {}", loginRequest.email());
             
             // Verificar que el usuario existe
-            var customerOpt = customerDetailsService.findByEmail(loginRequest.getEmail());
+            var customerOpt = customerDetailsService.findByEmail(loginRequest.email());
             if (customerOpt.isEmpty()) {
-                log.warn("❌ Usuario no encontrado: {}", loginRequest.getEmail());
+                log.warn("❌ Usuario no encontrado: {}", loginRequest.email());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales inválidas");
             }
@@ -52,11 +52,11 @@ public class AuthController {
             log.info("✅ Usuario encontrado: {} con rol: {}", customer.getEmail(), customer.getRole());
             
             // Verificar contraseña
-            boolean passwordMatches = passwordEncoder.matches(loginRequest.getPassword(), customer.getPassword());
+            boolean passwordMatches = passwordEncoder.matches(loginRequest.password(), customer.getPassword());
             log.info("🔑 Password matches: {}", passwordMatches);
             
             if (!passwordMatches) {
-                log.warn("❌ Contraseña incorrecta para: {}", loginRequest.getEmail());
+                log.warn("❌ Contraseña incorrecta para: {}", loginRequest.email());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales inválidas");
             }
@@ -64,12 +64,12 @@ public class AuthController {
             // Autenticar cliente
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                    loginRequest.getEmail(), 
-                    loginRequest.getPassword()
+                    loginRequest.email(), 
+                    loginRequest.password()
                 )
             );
             
-            log.info("🎯 Autenticación exitosa para: {}", loginRequest.getEmail());
+            log.info("🎯 Autenticación exitosa para: {}", loginRequest.email());
 
             // Generar token
             String token = jwtUtil.generateToken(
@@ -78,23 +78,20 @@ public class AuthController {
                 customer.getCustomerId()
             );
             
-            log.info("🔗 Token generado para: {}", loginRequest.getEmail());
+            log.info("🔗 Token generado para: {}", loginRequest.email());
 
             // Crear respuesta usando LoginResponse
-            LoginResponse response = LoginResponse.builder()
-                .token(token)
-                .type("Bearer")
-                .customerId(customer.getCustomerId())
-                .email(customer.getEmail())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .role(customer.getRole().name())
-                .build();
+            LoginResponse response = new LoginResponse(
+                token,
+                customer.getEmail(),
+                customer.getFirstName(),
+                customer.getLastName()
+            );
 
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {
-            log.error("Error de autenticación para email: {}", loginRequest.getEmail());
+            log.error("Error de autenticación para email: {}", loginRequest.email());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body("Credenciales inválidas");
         } catch (Exception e) {

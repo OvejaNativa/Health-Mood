@@ -1,6 +1,9 @@
 package cl.healthmood.Health.Mood.security.service;
 
-import cl.healthmood.Health.Mood.dto.*;
+import cl.healthmood.Health.Mood.dto.CustomerRequest;
+import cl.healthmood.Health.Mood.dto.CustomerResponse;
+import cl.healthmood.Health.Mood.security.dto.LoginRequest;
+import cl.healthmood.Health.Mood.security.dto.LoginResponse;
 import cl.healthmood.Health.Mood.model.Customer;
 import cl.healthmood.Health.Mood.model.Role;
 import cl.healthmood.Health.Mood.repository.CustomerRepository;
@@ -20,10 +23,10 @@ public class AuthService {
     private final JwtUtils jwtUtil;
 
     public LoginResponse login(LoginRequest request) {
-        Customer customer = customerRepository.findByEmail(request.getEmail())
+        Customer customer = customerRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), customer.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
 
@@ -33,14 +36,12 @@ public class AuthService {
                 customer.getCustomerId()
         );
 
-        return LoginResponse.builder()
-                .token(token)
-                .customerId(customer.getCustomerId())
-                .email(customer.getEmail())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .role(customer.getRole().name())
-                .build();
+        return new LoginResponse(
+                token,
+                customer.getEmail(),
+                customer.getFirstName(),
+                customer.getLastName()
+        );
     }
 
     public CustomerResponse register(CustomerRequest request) {
@@ -94,13 +95,11 @@ public class AuthService {
                 customer.getCustomerId()
         );
 
-        return LoginResponse.builder()
-                .token(newToken)
-                .customerId(customer.getCustomerId())
-                .email(customer.getEmail())
-                .firstName(customer.getFirstName())
-                .lastName(customer.getLastName())
-                .role(customer.getRole().name())
-                .build();
+        return new LoginResponse(
+                newToken,
+                customer.getEmail(),
+                customer.getFirstName(),
+                customer.getLastName()
+        );
     }
 }

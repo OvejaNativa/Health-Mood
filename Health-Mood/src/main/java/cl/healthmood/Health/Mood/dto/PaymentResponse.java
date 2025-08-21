@@ -5,17 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginResponse {
+public class PaymentResponse {
 
-    private String token;
-    private String type = "Bearer";
+    private Integer paymentId;
     private Integer customerId;
-    private String email;
-    private String firstName;
-    private String lastName;
-    private String role;
+    private String customerName;
+    private Integer pedidoId;
+    private LocalDate paymentDate;
+    private Integer amount;
 }
