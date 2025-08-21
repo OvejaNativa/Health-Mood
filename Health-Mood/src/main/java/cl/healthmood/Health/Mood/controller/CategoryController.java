@@ -1,8 +1,10 @@
 package cl.healthmood.Health.Mood.controller;
 
-import cl.healthmood.Health.Mood.model.Category;
+import cl.healthmood.Health.Mood.dto.CategoryRequest;
+import cl.healthmood.Health.Mood.dto.CategoryResponse;
 import cl.healthmood.Health.Mood.service.CategoryService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -10,6 +12,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,17 +21,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 @CrossOrigin(origins = "*")
 public class CategoryController {
 
     private final CategoryService categoryService;
 
+    // Solo ADMIN puede crear categorías
     @PostMapping
-    public ResponseEntity<Category> createCategory(@RequestBody Category category) {
-        log.info("Creating new category: {}", category.getName());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest categoryRequest) {
+        log.info("Creating new category: {}", categoryRequest.getName());
         try {
-            Category savedCategory = categoryService.save(category);
+            CategoryResponse savedCategory = categoryService.save(categoryRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
         } catch (IllegalArgumentException e) {
             log.error("Validation error creating category: {}", e.getMessage());
@@ -35,36 +42,44 @@ public class CategoryController {
         }
     }
 
+    // Tanto CUSTOMER como ADMIN pueden ver todas las categorías
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         log.info("Getting all categories");
-        List<Category> categories = categoryService.findAll();
+        List<CategoryResponse> categories = categoryService.findAll();
         return ResponseEntity.ok(categories);
     }
 
+    // Tanto CUSTOMER como ADMIN pueden ver categorías paginadas
     @GetMapping("/paginated")
-    public ResponseEntity<Page<Category>> getAllCategoriesPaginated(
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public ResponseEntity<Page<CategoryResponse>> getAllCategoriesPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         log.info("Getting categories paginated - page: {}, size: {}", page, size);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Category> categories = categoryService.findAll(pageable);
+        Page<CategoryResponse> categories = categoryService.findAll(pageable);
         return ResponseEntity.ok(categories);
     }
 
+    // Tanto CUSTOMER como ADMIN pueden ver categoría por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Integer id) {
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Integer id) {
         log.info("Getting category by ID: {}", id);
         return categoryService.findById(id)
-                .map(category -> ResponseEntity.ok(category))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Solo ADMIN puede actualizar categorías
     @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategory(@PathVariable Integer id, @RequestBody Category category) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> updateCategory(@PathVariable Integer id, @Valid @RequestBody CategoryRequest categoryRequest) {
         log.info("Updating category ID: {}", id);
         try {
-            Category updatedCategory = categoryService.update(id, category);
+            CategoryResponse updatedCategory = categoryService.update(id, categoryRequest);
             return ResponseEntity.ok(updatedCategory);
         } catch (IllegalArgumentException e) {
             log.error("Validation error updating category: {}", e.getMessage(), e);
@@ -78,8 +93,9 @@ public class CategoryController {
         }
     }
 
-
+    // Solo ADMIN puede eliminar categorías
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(@PathVariable Integer id) {
         log.info("Deleting category ID: {}", id);
         try {
@@ -97,42 +113,53 @@ public class CategoryController {
         }
     }
 
-
+    // Tanto CUSTOMER como ADMIN pueden buscar categorías por nombre
     @GetMapping("/search")
-    public ResponseEntity<List<Category>> searchCategoriesByName(@RequestParam String name) {
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public ResponseEntity<List<CategoryResponse>> searchCategoriesByName(@RequestParam String name) {
         log.info("Searching categories by name: {}", name);
-        List<Category> categories = categoryService.findByNameContainingIgnoreCase(name);
+        List<CategoryResponse> categories = categoryService.findByNameContainingIgnoreCase(name);
         return ResponseEntity.ok(categories);
     }
 
+    // Tanto CUSTOMER como ADMIN pueden obtener categoría por nombre
     @GetMapping("/name/{name}")
-    public ResponseEntity<Category> getCategoryByName(@PathVariable String name) {
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public ResponseEntity<CategoryResponse> getCategoryByName(@PathVariable String name) {
         log.info("Getting category by exact name: {}", name);
         return categoryService.findByName(name)
-                .map(category -> ResponseEntity.ok(category))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Tanto CUSTOMER como ADMIN pueden verificar si existe por nombre
     @GetMapping("/exists/name/{name}")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ResponseEntity<Boolean> existsByName(@PathVariable String name) {
         boolean exists = categoryService.existsByName(name);
         return ResponseEntity.ok(exists);
     }
 
+    // Tanto CUSTOMER como ADMIN pueden verificar si existe por ID
     @GetMapping("/exists/{id}")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ResponseEntity<Boolean> existsById(@PathVariable Integer id) {
         boolean exists = categoryService.existsById(id);
         return ResponseEntity.ok(exists);
     }
 
+    // Tanto CUSTOMER como ADMIN pueden ver categorías con productos
     @GetMapping("/with-products")
-    public ResponseEntity<List<Category>> getCategoriesWithProducts() {
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    public ResponseEntity<List<CategoryResponse>> getCategoriesWithProducts() {
         log.info("Getting categories with products");
-        List<Category> categories = categoryService.findAllWithProducts();
+        List<CategoryResponse> categories = categoryService.findAllWithProducts();
         return ResponseEntity.ok(categories);
     }
 
+    // Tanto CUSTOMER como ADMIN pueden ver el conteo de categorías
     @GetMapping("/count")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ResponseEntity<Long> getCategoryCount() {
         long count = categoryService.count();
         return ResponseEntity.ok(count);

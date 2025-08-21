@@ -1,5 +1,8 @@
 package cl.healthmood.Health.Mood.service;
 
+import cl.healthmood.Health.Mood.dto.CategoryRequest;
+import cl.healthmood.Health.Mood.dto.CategoryResponse;
+import cl.healthmood.Health.Mood.mapper.CategoryMapper;
 import cl.healthmood.Health.Mood.model.Category;
 import cl.healthmood.Health.Mood.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,50 +22,59 @@ import java.util.Optional;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
     @Override
     @Transactional
-    public Category save(Category category) {
-        log.debug("Guardando categoría: {}", category.getName());
-        validateCategory(category);
+    public CategoryResponse save(CategoryRequest categoryRequest) {
+        log.debug("Guardando categoría: {}", categoryRequest.getName());
+        validateCategoryRequest(categoryRequest);
 
-        if (existsByName(category.getName())) {
-            throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + category.getName());
+        if (existsByName(categoryRequest.getName())) {
+            throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + categoryRequest.getName());
         }
 
-        return categoryRepository.save(category);
+        Category category = categoryMapper.toEntity(categoryRequest);
+        Category savedCategory = categoryRepository.save(category);
+        return categoryMapper.toResponse(savedCategory);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Category> findById(Integer id) {
+    public Optional<CategoryResponse> findById(Integer id) {
         log.debug("Buscando categoría por ID: {}", id);
-        return categoryRepository.findById(id);
+        return categoryRepository.findById(id)
+                .map(categoryMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Category> findAll() {
+    public List<CategoryResponse> findAll() {
         log.debug("Obteniendo todas las categorías");
-        return categoryRepository.findAll();
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Category> findAll(Pageable pageable) {
+    public Page<CategoryResponse> findAll(Pageable pageable) {
         log.debug("Obteniendo categorías paginadas: {}", pageable);
-        return categoryRepository.findAll(pageable);
+        return categoryRepository.findAll(pageable)
+                .map(categoryMapper::toResponse);
     }
 
     @Override
     @Transactional
-    public Category update(Integer id, Category category) {
+    public CategoryResponse update(Integer id, CategoryRequest categoryRequest) {
         log.debug("Actualizando categoría ID: {}", id);
+        validateCategoryRequest(categoryRequest);
 
         return categoryRepository.findById(id)
                 .map(existingCategory -> {
-                    updateCategoryFields(existingCategory, category);
-                    return categoryRepository.save(existingCategory);
+                    updateCategoryFields(existingCategory, categoryRequest);
+                    Category updatedCategory = categoryRepository.save(existingCategory);
+                    return categoryMapper.toResponse(updatedCategory);
                 })
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
     }
@@ -89,16 +102,19 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Category> findByNameContainingIgnoreCase(String name) {
+    public List<CategoryResponse> findByNameContainingIgnoreCase(String name) {
         log.debug("Buscando categorías por nombre: {}", name);
-        return categoryRepository.findByNameContainingIgnoreCase(name);
+        return categoryRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Category> findByName(String name) {
+    public Optional<CategoryResponse> findByName(String name) {
         log.debug("Buscando categoría por nombre exacto: {}", name);
-        return categoryRepository.findByName(name);
+        return categoryRepository.findByName(name)
+                .map(categoryMapper::toResponse);
     }
 
     @Override
@@ -109,9 +125,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Category> findAllWithProducts() {
+    public List<CategoryResponse> findAllWithProducts() {
         log.debug("Obteniendo categorías con productos");
-        return categoryRepository.findAllWithProducts();
+        return categoryRepository.findAllWithProducts().stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -120,27 +138,27 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.count();
     }
 
-    private void validateCategory(Category category) {
-        if (category.getName() == null || category.getName().trim().isEmpty()) {
+    private void validateCategoryRequest(CategoryRequest categoryRequest) {
+        if (categoryRequest.getName() == null || categoryRequest.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre de la categoría es obligatorio");
         }
 
-        if (category.getName().length() > 100) {
+        if (categoryRequest.getName().length() > 100) {
             throw new IllegalArgumentException("El nombre de la categoría no puede exceder 100 caracteres");
         }
     }
 
-    private void updateCategoryFields(Category existing, Category updated) {
-        if (updated.getName() != null && !updated.getName().trim().isEmpty()) {
+    private void updateCategoryFields(Category existing, CategoryRequest categoryRequest) {
+        if (categoryRequest.getName() != null && !categoryRequest.getName().trim().isEmpty()) {
             // Validar que el nuevo nombre no exista si es diferente al actual
-            if (!existing.getName().equals(updated.getName()) && existsByName(updated.getName())) {
-                throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + updated.getName());
+            if (!existing.getName().equals(categoryRequest.getName()) && existsByName(categoryRequest.getName())) {
+                throw new IllegalArgumentException("Ya existe una categoría con el nombre: " + categoryRequest.getName());
             }
-            existing.setName(updated.getName().trim());
+            existing.setName(categoryRequest.getName().trim());
         }
 
-        if (updated.getDescription() != null) {
-            existing.setDescription(updated.getDescription());
+        if (categoryRequest.getDescription() != null) {
+            existing.setDescription(categoryRequest.getDescription());
         }
     }
 }

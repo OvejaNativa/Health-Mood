@@ -81,4 +81,74 @@ public class PedidoServiceImpl implements PedidoService {
         }
         pedidoRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PedidoResponse getPedidoByIdAndCustomerEmail(Integer id, String customerEmail) {
+        Customer customer = customerRepository.findByEmail(customerEmail)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con email: " + customerEmail));
+        
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
+        
+        // Verificar que el pedido pertenezca al customer
+        if (!pedido.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
+            throw new RuntimeException("No tienes permiso para ver este pedido");
+        }
+        
+        return pedidoMapper.toResponse(pedido);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponse> getPedidosByCustomerEmail(String customerEmail) {
+        Customer customer = customerRepository.findByEmail(customerEmail)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con email: " + customerEmail));
+        
+        return pedidoRepository.findByCustomer(customer)
+                .stream()
+                .map(pedidoMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PedidoResponse createPedidoForCustomer(PedidoRequest request, String customerEmail) {
+        Customer customer = customerRepository.findByEmail(customerEmail)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con email: " + customerEmail));
+
+        // Asegurar que el pedido se cree para el customer autenticado
+        PedidoRequest customerRequest = PedidoRequest.builder()
+                .customerId(customer.getCustomerId())
+                .orderStatus(request.getOrderStatus())
+                .orderDate(request.getOrderDate())
+                .requiredDate(request.getRequiredDate())
+                .shippedDate(request.getShippedDate())
+                .build();
+
+        Pedido pedido = pedidoMapper.toEntity(customerRequest, customer);
+        Pedido savedPedido = pedidoRepository.save(pedido);
+        return pedidoMapper.toResponse(savedPedido);
+    }
+
+    @Override
+    public PedidoResponse updatePedidoForCustomer(Integer id, PedidoRequest request, String customerEmail) {
+        Customer customer = customerRepository.findByEmail(customerEmail)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con email: " + customerEmail));
+        
+        Pedido existingPedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
+
+        // Verificar que el pedido pertenezca al customer
+        if (!existingPedido.getCustomer().getCustomerId().equals(customer.getCustomerId())) {
+            throw new RuntimeException("No tienes permiso para modificar este pedido");
+        }
+
+        existingPedido.setOrderStatus(request.getOrderStatus());
+        existingPedido.setOrderDate(request.getOrderDate());
+        existingPedido.setRequiredDate(request.getRequiredDate());
+        existingPedido.setShippedDate(request.getShippedDate());
+
+        Pedido updatedPedido = pedidoRepository.save(existingPedido);
+        return pedidoMapper.toResponse(updatedPedido);
+    }
 }

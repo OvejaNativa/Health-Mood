@@ -9,6 +9,7 @@ import cl.healthmood.Health.Mood.security.service.CustomerDetailsServiceImpl;
 import cl.healthmood.Health.Mood.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,6 +30,7 @@ import java.util.Map;
 @Slf4j
 public class AuthController {
 
+    @Lazy
     private final AuthenticationManager authenticationManager;
     private final CustomerDetailsServiceImpl customerDetailsService;
     private final CustomerService customerService;

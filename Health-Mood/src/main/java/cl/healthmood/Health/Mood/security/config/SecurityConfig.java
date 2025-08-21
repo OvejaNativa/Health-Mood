@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,12 +17,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -35,26 +38,33 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 Rutas públicas - ORDEN IMPORTA
+                        // Rutas públicas - ORDEN IMPORTA
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/test").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/api/products/**").permitAll()
-                        .requestMatchers("/api/categories/**").permitAll()
-                        .requestMatchers("/api/customers/**").permitAll()
+                        // Productos - solo consultas públicas, operaciones CUD requieren auth
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers("/api/products/**").authenticated()
+                        // Imágenes - solo consultas públicas, operaciones CUD requieren auth
+                        .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
+                        .requestMatchers("/api/images/**").authenticated()
+                        // Posts - solo consultas públicas, operaciones CUD requieren auth
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers("/api/posts/**").authenticated()
+                        // Categorías - requieren autenticación, permisos específicos en @PreAuthorize
+                        .requestMatchers("/api/categories/**").authenticated()
+                        // Customers - requieren autenticación, permisos específicos en @PreAuthorize
+                        .requestMatchers("/api/customers/**").authenticated()
 
-                        // 🔐 Rutas solo para ADMIN
+                        // Rutas solo para ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/customers/admin/**").hasRole("ADMIN")
 
-                        // 🔐 Rutas que requieren autenticación (ADMIN o CUSTOMER)
+                        // Rutas que requieren autenticación (ADMIN o CUSTOMER)
                         .requestMatchers("/api/pedidos/**").authenticated()
                         .requestMatchers("/api/payments/**").authenticated()
                         .requestMatchers("/api/cart/**").authenticated()
+                        .requestMatchers("/api/cart-items/**").authenticated()
 
-                        // 🚨 Esta debe ser la última regla
+                        // Esta debe ser la última regla
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -80,23 +90,23 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 🌍 Permitir todos los orígenes para pruebas (en producción usar dominios específicos)
+        // Permitir todos los orígenes para pruebas (en producción usar dominios específicos)
         configuration.addAllowedOriginPattern("*");
         
-        // 📋 Métodos HTTP permitidos
+        // Métodos HTTP permitidos
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");
         configuration.addAllowedMethod("PUT");
         configuration.addAllowedMethod("DELETE");
         configuration.addAllowedMethod("OPTIONS");
         
-        // 📧 Headers permitidos
+        // Headers permitidos
         configuration.addAllowedHeader("*");
         
-        // 🍪 Permitir credenciales
+        // Permitir credenciales
         configuration.setAllowCredentials(true);
         
-        // 📤 Headers expuestos
+        // Headers expuestos
         configuration.addExposedHeader("Authorization");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -1,6 +1,7 @@
 package cl.healthmood.Health.Mood.service;
 
-import cl.healthmood.Health.Mood.model.Category;
+import cl.healthmood.Health.Mood.dto.CategoryRequest;
+import cl.healthmood.Health.Mood.dto.CategoryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -9,27 +10,27 @@ import java.util.Optional;
 
 public interface CategoryService {
 
-    Category save(Category category);
+    CategoryResponse save(CategoryRequest categoryRequest);
 
-    Optional<Category> findById(Integer id);
+    Optional<CategoryResponse> findById(Integer id);
 
-    List<Category> findAll();
+    List<CategoryResponse> findAll();
 
-    Page<Category> findAll(Pageable pageable);
+    Page<CategoryResponse> findAll(Pageable pageable);
 
-    Category update(Integer id, Category category);
+    CategoryResponse update(Integer id, CategoryRequest categoryRequest);
 
     void deleteById(Integer id);
 
     boolean existsById(Integer id);
 
-    List<Category> findByNameContainingIgnoreCase(String name);
+    List<CategoryResponse> findByNameContainingIgnoreCase(String name);
 
-    Optional<Category> findByName(String name);
+    Optional<CategoryResponse> findByName(String name);
 
     boolean existsByName(String name);
 
-    List<Category> findAllWithProducts();
+    List<CategoryResponse> findAllWithProducts();
 
     long count();
 }
