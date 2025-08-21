@@ -295,9 +295,12 @@ http://localhost:8080/swagger-ui.html
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-## 👥 Autor
+## 👥 Autores
 
 - **OvejaNativa** - [GitHub](https://github.com/OvejaNativa)
+- **Ariel Astorga** - [GitHub](https://github.com/astorgaAriel)
+- **MoreDevJ** - [GitHub](https://github.com/moredevj)  
+- **Carolina Hurtado** - [GitHub](https://github.com/carohurtadosaa)
 
 ## 🆘 Soporte
 
