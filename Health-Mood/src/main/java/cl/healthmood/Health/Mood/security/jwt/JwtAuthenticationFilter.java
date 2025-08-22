@@ -28,39 +28,67 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();
+        String method = request.getMethod();
 
-        // 🔓 Ignorar rutas públicas (login y register, y cualquier otra en /api/auth/**)
-        if (path.startsWith("/api/auth/")) {
+        // 🔓 Si es una ruta pública, continuar sin procesar JWT
+        if (isPublicPath(path, method)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 🔐 Revisar Authorization header
+        // 🔐 Solo procesar JWT para rutas que requieren autenticación
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                String username = jwtUtils.extractEmail(token);
 
-        String token = authHeader.substring(7);
-        String username = jwtUtils.extractEmail(token);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            if (jwtUtils.validateToken(token, username)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    if (jwtUtils.validateToken(token, username)) {
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                }
+            } catch (Exception e) {
+                // Log del error pero no interrumpir la cadena
+                System.err.println("Error procesando JWT: " + e.getMessage());
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Determina si una ruta es pública y no requiere autenticación
+     */
+    private boolean isPublicPath(String path, String method) {
+        // Rutas de autenticación siempre públicas
+        if (path.startsWith("/api/auth/")) {
+            return true;
+        }
+
+        // Rutas públicas explícitas
+        if (path.startsWith("/api/public/")) {
+            return true;
+        }
+
+        // Solo GET requests son públicos para estos endpoints
+        if ("GET".equals(method)) {
+            return path.startsWith("/api/products/") ||
+                    path.startsWith("/api/posts/") ||
+                    path.startsWith("/api/images/") ||
+                    path.startsWith("/api/categories/");
+        }
+
+        return false;
     }
 }

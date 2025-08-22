@@ -10,22 +10,35 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CustomerDetailsServiceImpl implements UserDetailsService {
+    private static final Logger logger = LoggerFactory.getLogger(CustomerDetailsServiceImpl.class);
 
     private final CustomerRepository customerRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Cliente no encontrado con email: " + email));
+        logger.info("Buscando cliente con email: {}", email);
+        Optional<Customer> customerOpt = customerRepository.findByEmail(email);
+        if (customerOpt.isEmpty()) {
+            logger.warn("No se encontró cliente con email: {}", email);
+            throw new UsernameNotFoundException("Cliente no encontrado con email: " + email);
+        }
+        Customer customer = customerOpt.get();
 
-        // Solo ADMIN o CUSTOMER permitidos
-        String role = customer.getRole().name(); // ADMIN o CUSTOMER
+        if (customer.getRole() == null) {
+            logger.error("El cliente con email {} no tiene rol asignado.", email);
+            throw new UsernameNotFoundException("El cliente no tiene rol asignado: " + email);
+        }
+        String role = customer.getRole().name();
+        logger.info("Rol obtenido para el cliente {}: {}", email, role);
 
         return new User(
                 customer.getEmail(),
